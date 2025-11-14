@@ -1,0 +1,5 @@
+vinho_nome,tipo,sabor,corpo,acidez,tanino,notas_sabor
+Cabernet Sauvignon,Tinto,Seco,Encorpado,Baixa,Alto,"Cassis, pimenta, baunilha"
+Pinot Noir,Tinto,Seco,Leve,Média,Baixo,"Cereja, terra, especiarias"
+Sauvignon Blanc,Branco,Seco,Leve,Alta,Baixo,"Cítrico, grama cortada, maracujá"
+Vinho do Porto,Tinto,Doce,Encorpado,Baixa,Alto,"Frutas secas, caramelo, nozes"
