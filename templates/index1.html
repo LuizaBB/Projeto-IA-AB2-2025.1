@@ -5,17 +5,17 @@
     <title>Sistema de Recomendação de Vinhos</title>
 </head>
 <body>
-    <h1>🍷 Sistema de Recomendação de Vinhos</h1>
-    
+     <h1>Sistema de Recomendação de Vinhos</h1>
+
     <form method="POST" action="/">
         <label for="dish_input">Descreva seu prato de jantar:</label><br>
-        <textarea id="dish_input" name="dish_input" rows="4" cols="50" required>{{ dish_input if dish_input else '' }}</textarea><br><br>
+         <textarea id="dish_input" name="dish_input" rows="4" cols="50" required></textarea><br><br>
         <input type="submit" value="Recomendar Vinho">
     </form>
 
     {% if recommendation %}
         <hr>
-        <h2>✨ Recomendação: {{ recommendation }}</h2>
+         <h2>Recomendação: {{ recommendation }}</h2>
         <h3>Porquê?</h3>
         <p>{{ justification }}</p>
     {% endif %}
