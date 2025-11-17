@@ -60,33 +60,36 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
             print(f"Erro inesperado no processamento do JSON: {e}")
             return {}
     return {}
-    
-def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> str:
+
+def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> tuple[str, int]:
     tipo_carne = dish_features.get('tipo_carne', 'Não Classificado')
     intensidade = dish_features.get('intensidade', 3)
     acidez_prato = dish_features.get('acidez', 'Média')
-    recommended_df = df_vinhos.copy()
+    scored_df = df_vinhos.copy()
+    scored_df['score'] = 0
     if tipo_carne == 'Carne Vermelha':
-        recommended_df = recommended_df[recommended_df['tipo'] == 'Tinto']
+        scored_df['score'] += scored_df['tipo'].apply(lambda x: 30 if x == 'Tinto' else 5)
     elif tipo_carne in ['Peixe', 'Aves']:
-        recommended_df = recommended_df[
-            (recommended_df['tipo'].isin(['Branco', 'Rosé'])) | (recommended_df['corpo'] == 'Leve')]
+        scored_df['score'] += scored_df.apply(lambda row: 30 if row['tipo'] in ['Branco', 'Rosé'] else (15 if row['corpo'] == 'Leve' else 0), axis=1)
     elif tipo_carne == 'Vegetariano':
-        recommended_df = recommended_df[
-            (recommended_df['notas_sabor'].str.contains('terra|cogumelo', case=False, na=False)) | (recommended_df['tipo'].isin(['Branco', 'Rosé']))]
+        scored_df['score'] += scored_df.apply(lambda row: 30 if (row['tipo'] in ['Branco', 'Rosé'] or 'terra' in row['notas_sabor']) else 0, axis=1)
     if intensidade >= 4:
-        recommended_df = recommended_df[recommended_df['corpo'] == 'Encorpado']
+        scored_df['score'] += scored_df['corpo'].apply(lambda x: 50 if x == 'Encorpado' else (25 if x == 'Médio' else 0))
     elif intensidade <= 2:
-        recommended_df = recommended_df[recommended_df['corpo'] == 'Leve']
+        scored_df['score'] += scored_df['corpo'].apply(lambda x: 50 if x == 'Leve' else (25 if x == 'Médio' else 0))
+    else:
+        scored_df['score'] += scored_df['corpo'].apply(lambda x: 50 if x == 'Médio' else 25)
     if acidez_prato == 'Alta':
-        recommended_df = recommended_df[recommended_df['acidez'].isin(['Média', 'Alta'])]
-    elif acidez_prato == 'Baixa' and recommended_df['tipo'].iloc[0] == 'Branco':
-        recommended_df = recommended_df[recommended_df['acidez'].isin(['Baixa', 'Média'])]
-    if recommended_df.empty:
-        return "Pinot Noir (Recomendação Padrão por Versatilidade)"
-    return recommended_df['vinho_nome'].iloc[0]
+        scored_df['score'] += scored_df['acidez'].apply(lambda x: 20 if x in ['Média', 'Alta'] else 0)
+    elif acidez_prato == 'Baixa':
+        scored_df['score'] += scored_df['acidez'].apply(lambda x: 20 if x in ['Baixa', 'Média'] else 0)
+    scored_df = scored_df[scored_df['score'] > 0] #inicio da selecao final
+    if scored_df.empty:
+        return "Pinot Noir (Recomendação Padrão)", 50
+    best_match = scored_df.loc[scored_df['score'].idxmax()]
+    return best_match['vinho_nome'], int(best_match['score'])
 
-def generate_justification(client: genai.Client, dish_description: str, wine_name: str, df_vinhos: pd.DataFrame) -> str:
+def generate_justification(client: genai.Client, dish_description: str, wine_name: str, df_vinhos: pd.DataFrame, wine_score: int) -> str:
     try:
         wine_data = df_vinhos[df_vinhos['vinho_nome'] == wine_name].iloc[0]
         notas_sabor = wine_data['notas_sabor']
@@ -99,10 +102,11 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
 
     - **PRATO:** {dish_description}
     - **VINHO RECOMENDADO:** {wine_name} ({tipo_vinho}, {corpo_vinho})
+    - **COMPATIBILIDADE CALCULADA:** {wine_score}%
     - **CARACTERÍSTICAS-CHAVE DO VINHO:** Notas de {notas_sabor}.
 
-    Explique a harmonização em 3 a 4 frases, focando em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
-    """ #prompt para gemini
+    Explique a harmonização em 3 a 4 frases, usando o percentual de compatibilidade para reforçar a excelência da escolha. Foque em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
+    """
     MAX_RETRIES = 3
     DELAY_SECONDS = 2
     for attempt in range(MAX_RETRIES):
@@ -121,17 +125,18 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
     return "Erro desconhecido. Não foi possível gerar a justificativa."
 
 @app.route('/', methods=['GET', 'POST'])
-def index1():
-    global client
+
+def index2():
+    global client, df_vinhos
     if request.method == 'POST':
         user_dish_description = request.form.get('dish_input')
         dish_features = extract_dish_characteristics(client, user_dish_description)
         if not dish_features:
-             return render_template('index1.html', recommendation="Erro: Não foi possível processar o prato. Tente novamente.", justification="")
-        recommended_wine = recommend_wine(dish_features, df_vinhos)
-        justification = generate_justification(client, user_dish_description, recommended_wine, df_vinhos)
-        return render_template('index1.html', recommendation=recommended_wine, justification=justification, dish_input=user_dish_description)
-    return render_template('index1.html') #metodo GET
+             return render_template('index2.html', recommendation="Erro: Não foi possível processar o prato. Tente novamente.", justification="")
+        recommended_wine, wine_score = recommend_wine(dish_features, df_vinhos)
+        justification = generate_justification(client, user_dish_description, recommended_wine, df_vinhos, wine_score)
+        return render_template('index2.html', recommendation=recommended_wine, justification=justification, dish_input=user_dish_description, wine_score=wine_score)
+    return render_template('index2.html') # metodo GET
 
 if __name__ == '__main__':
     load_data()
