@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 from google.genai.errors import APIError
 import json
 
+import time
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -33,23 +35,33 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
 
     Descrição do Prato: "{dish_description}"
     """ #prompt detalhado para o gemini
-    try:
-        response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt, config=genai.types.GenerateContentConfig(
-            response_mime_type="application/json", 
-                response_schema={
-                    "type": "object",
-                    "properties": {
-                        "tipo_carne": {"type": "string"},
-                        "intensidade": {"type": "number"},
-                        "acidez": {"type": "string"},
-                        "sabor_principal": {"type": "string"}}}))
-        return json.loads(response.text)
-    except APIError as e:
-        print(f"Erro na chamada da API Gemini: {e}")
-        return {}
-    except Exception as e:
-        print(f"Erro inesperado no processamento do JSON: {e}")
-        return {}
+
+    MAX_RETRIES = 3
+    DELAY_SECONDS = 2
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt, config=genai.types.GenerateContentConfig(
+                response_mime_type="application/json", 
+                    response_schema={
+                        "type": "object",
+                        "properties": {
+                            "tipo_carne": {"type": "string"},
+                            "intensidade": {"type": "number"},
+                            "acidez": {"type": "string"},
+                            "sabor_principal": {"type": "string"}}}))
+            return json.loads(response.text)
+        except APIError as e:
+            if attempt < MAX_RETRIES - 1:
+                    print(f"Erro na API Gemini (Tentativa {attempt + 1}): {e}. Tentando novamente em {DELAY_SECONDS}s...")
+                    time.sleep(DELAY_SECONDS)
+            else:
+                # Se for a última tentativa, falha
+                print(f"Erro na API Gemini: Falha após {MAX_RETRIES} tentativas. Erro: {e}")
+                return {}
+        except Exception as e:
+            print(f"Erro inesperado no processamento do JSON: {e}")
+            return {}
+    return {}
     
 def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> str:
     tipo_carne = dish_features.get('tipo_carne', 'Não Classificado')
