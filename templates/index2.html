@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Recomendação de Vinhos</title>
+</head>
+<body>
+     <h1>Sistema de Recomendação de Vinhos</h1>
+
+    <form method="POST" action="/">
+        <label for="dish_input">Descreva seu prato de jantar:</label><br>
+         <textarea id="dish_input" name="dish_input" rows="4" cols="50" required></textarea><br><br>
+        <input type="submit" value="Recomendar Vinho">
+    </form>
+
+    {% if recommendation %}
+        <hr>
+        <h2>Recomendação: {{ recommendation }}</h2>
+        <h3>Compatibilidade: {{ wine_score }}%</h3>
+        <h3>Porquê?</h3>
+        <p>{{ justification }}</p>
+    {% endif %}
+
+</body>
+</html>
