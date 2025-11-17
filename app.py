@@ -102,13 +102,17 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
         return f"Erro na API do Gemini ao gerar justificativa: {e}"
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
+def index1():
+    global client
     if request.method == 'POST':
         user_dish_description = request.form.get('dish_input')
-        recommended_wine = "Aguardando Algoritmo..."
-        justification = "Aguardando Justificativa do Gemini..."
-        return render_template('index1.html', recommendation=recommended_wine, justification=justification,dish_input=user_dish_description)
-    return render_template('index1.html')
+        dish_features = extract_dish_characteristics(client, user_dish_description)
+        if not dish_features:
+             return render_template('index1.html', recommendation="Erro: Não foi possível processar o prato. Tente novamente.", justification="")
+        recommended_wine = recommend_wine(dish_features, df_vinhos)
+        justification = generate_justification(client, user_dish_description, recommended_wine, df_vinhos)
+        return render_template('index1.html', recommendation=recommended_wine, justification=justification, dish_input=user_dish_description)
+    return render_template('index1.html') #metodo GET
 
 if __name__ == '__main__':
     load_data()
