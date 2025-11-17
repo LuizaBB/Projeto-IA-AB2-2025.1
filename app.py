@@ -76,6 +76,31 @@ def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> str:
         return "Pinot Noir (Recomendação Padrão por Versatilidade)"
     return recommended_df['vinho_nome'].iloc[0]
 
+def generate_justification(client: genai.Client, dish_description: str, wine_name: str, df_vinhos: pd.DataFrame) -> str:
+    try:
+        wine_data = df_vinhos[df_vinhos['vinho_nome'] == wine_name].iloc[0]
+        notas_sabor = wine_data['notas_sabor']
+        tipo_vinho = wine_data['tipo']
+        corpo_vinho = wine_data['corpo']
+    except IndexError:
+        return f"Não foi possível encontrar detalhes para o vinho {wine_name} para justificar."
+    prompt = f"""
+    Você é um sommelier especialista. Sua tarefa é escrever uma justificativa de harmonização de vinhos de forma persuasiva e elegante.
+
+    - **PRATO:** {dish_description}
+    - **VINHO RECOMENDADO:** {wine_name} ({tipo_vinho}, {corpo_vinho})
+    - **CARACTERÍSTICAS-CHAVE DO VINHO:** Notas de {notas_sabor}.
+
+    Explique a harmonização em 3 a 4 frases, focando em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
+    """
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt)
+        return response.text
+    except APIError as e:
+        return f"Erro na API do Gemini ao gerar justificativa: {e}"
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
