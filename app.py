@@ -50,6 +50,31 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
     except Exception as e:
         print(f"Erro inesperado no processamento do JSON: {e}")
         return {}
+    
+def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> str:
+    tipo_carne = dish_features.get('tipo_carne', 'Não Classificado')
+    intensidade = dish_features.get('intensidade', 3)
+    acidez_prato = dish_features.get('acidez', 'Média')
+    recommended_df = df_vinhos.copy()
+    if tipo_carne == 'Carne Vermelha':
+        recommended_df = recommended_df[recommended_df['tipo'] == 'Tinto']
+    elif tipo_carne in ['Peixe', 'Aves']:
+        recommended_df = recommended_df[
+            (recommended_df['tipo'].isin(['Branco', 'Rosé'])) | (recommended_df['corpo'] == 'Leve')]
+    elif tipo_carne == 'Vegetariano':
+        recommended_df = recommended_df[
+            (recommended_df['notas_sabor'].str.contains('terra|cogumelo', case=False, na=False)) | (recommended_df['tipo'].isin(['Branco', 'Rosé']))]
+    if intensidade >= 4:
+        recommended_df = recommended_df[recommended_df['corpo'] == 'Encorpado']
+    elif intensidade <= 2:
+        recommended_df = recommended_df[recommended_df['corpo'] == 'Leve']
+    if acidez_prato == 'Alta':
+        recommended_df = recommended_df[recommended_df['acidez'].isin(['Média', 'Alta'])]
+    elif acidez_prato == 'Baixa' and recommended_df['tipo'].iloc[0] == 'Branco':
+        recommended_df = recommended_df[recommended_df['acidez'].isin(['Baixa', 'Média'])]
+    if recommended_df.empty:
+        return "Pinot Noir (Recomendação Padrão por Versatilidade)"
+    return recommended_df['vinho_nome'].iloc[0]
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
