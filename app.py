@@ -35,7 +35,6 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
 
     Descrição do Prato: "{dish_description}"
     """ #prompt detalhado para o gemini
-
     MAX_RETRIES = 3
     DELAY_SECONDS = 2
     for attempt in range(MAX_RETRIES):
@@ -54,8 +53,7 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
             if attempt < MAX_RETRIES - 1:
                     print(f"Erro na API Gemini (Tentativa {attempt + 1}): {e}. Tentando novamente em {DELAY_SECONDS}s...")
                     time.sleep(DELAY_SECONDS)
-            else:
-                # Se for a última tentativa, falha
+            else: #especifico para ultima falha
                 print(f"Erro na API Gemini: Falha após {MAX_RETRIES} tentativas. Erro: {e}")
                 return {}
         except Exception as e:
@@ -104,14 +102,23 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
     - **CARACTERÍSTICAS-CHAVE DO VINHO:** Notas de {notas_sabor}.
 
     Explique a harmonização em 3 a 4 frases, focando em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
-    """
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt)
-        return response.text
-    except APIError as e:
-        return f"Erro na API do Gemini ao gerar justificativa: {e}"
+    """ #prompt para gemini
+    MAX_RETRIES = 3
+    DELAY_SECONDS = 2
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt)
+            return response.text
+        except APIError as e:
+            if attempt < MAX_RETRIES - 1:
+                print(f"Erro na justificativa (Tentativa {attempt + 1}): {e}. Tentando novamente em {DELAY_SECONDS}s...")
+                time.sleep(DELAY_SECONDS)
+            else: #especifico para a ultima tentativa
+                print(f"Erro na API Gemini: Falha na Geração de Justificativa após {MAX_RETRIES} tentativas. Erro: {e}")
+                return "Erro: O servidor de Inteligência Artificial está temporariamente indisponível. Por favor, tente novamente mais tarde."
+    return "Erro desconhecido. Não foi possível gerar a justificativa."
 
 @app.route('/', methods=['GET', 'POST'])
 def index1():
