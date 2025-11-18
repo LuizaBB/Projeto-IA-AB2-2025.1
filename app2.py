@@ -3,19 +3,15 @@ import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from google import genai
 from dotenv import load_dotenv
-
 from google.genai.errors import APIError
 import json
-
 import time
 
 load_dotenv()
-
 app = Flask(__name__)
-
 client = genai.Client()
 
-def load_data():
+def loadData():
     try:
         global df_pratos, df_vinhos
         df_pratos = pd.read_csv('data/pratos.csv')
@@ -25,7 +21,7 @@ def load_data():
         print(f"Erro ao carregar dados: Verifique se os arquivos CSV estão na pasta 'data'. Erro: {e}")
         exit()
 
-def extract_dish_characteristics(client: genai.Client, dish_description: str) -> dict:
+def extractDishCharacteristics(client: genai.Client, dish_description: str) -> dict:
     prompt = f"""
     Analise a descrição do prato abaixo e extraia as seguintes características em um objeto JSON: 
     'tipo_carne' (ex: 'Carne Vermelha', 'Peixe', 'Aves', 'Vegetariano'),
@@ -61,7 +57,7 @@ def extract_dish_characteristics(client: genai.Client, dish_description: str) ->
             return {}
     return {}
 
-def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> tuple[str, int]:
+def recommendWine(dish_features: dict, df_vinhos: pd.DataFrame) -> tuple[str, int]:
     tipo_carne = dish_features.get('tipo_carne', 'Não Classificado')
     intensidade = dish_features.get('intensidade', 3)
     acidez_prato = dish_features.get('acidez', 'Média')
@@ -89,7 +85,7 @@ def recommend_wine(dish_features: dict, df_vinhos: pd.DataFrame) -> tuple[str, i
     best_match = scored_df.loc[scored_df['score'].idxmax()]
     return best_match['vinho_nome'], int(best_match['score'])
 
-def generate_justification(client: genai.Client, dish_description: str, wine_name: str, df_vinhos: pd.DataFrame, wine_score: int) -> str:
+def generateJustification(client: genai.Client, dish_description: str, wine_name: str, df_vinhos: pd.DataFrame, wine_score: int) -> str:
     try:
         wine_data = df_vinhos[df_vinhos['vinho_nome'] == wine_name].iloc[0]
         notas_sabor = wine_data['notas_sabor']
@@ -112,9 +108,7 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
     DELAY_SECONDS = 2
     for attempt in range(MAX_RETRIES):
         try:
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt)
+            response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
             return response.text
         except APIError as e:
             if attempt < MAX_RETRIES - 1:
@@ -139,15 +133,15 @@ def index2():
             user_dish_description = f"Prato principal com os ingredientes: {ingredients_str}."
         else:
             return render_template('index1.html', recommendation="Por favor, descreva o prato ou selecione ingredientes.", justification="")
-        dish_features = extract_dish_characteristics(client, user_dish_description)
+        dish_features = extractDishCharacteristics(client, user_dish_description)
         if not dish_features:
              return render_template('index2.html', recommendation="Erro: Não foi possível processar o prato. Tente novamente.", justification="")
-        recommended_wine, wine_score = recommend_wine(dish_features, df_vinhos)
-        justification = generate_justification(client, user_dish_description, recommended_wine, df_vinhos, wine_score)
+        recommended_wine, wine_score = recommendWine(dish_features, df_vinhos)
+        justification = generateJustification(client, user_dish_description, recommended_wine, df_vinhos, wine_score)
         return render_template('index2.html', recommendation=recommended_wine, justification=justification, dish_input=text_description, wine_score=wine_score)
         #dish_input: se tiver, é usado, se não passa como None
     return render_template('index2.html') #metodo GET
 
 if __name__ == '__main__':
-    load_data()
+    loadData()
     app.run(debug=True) #bom para desenvolvimento, desativar em produção
