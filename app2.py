@@ -106,6 +106,7 @@ def generate_justification(client: genai.Client, dish_description: str, wine_nam
     - **CARACTERÍSTICAS-CHAVE DO VINHO:** Notas de {notas_sabor}.
 
     Explique a harmonização em 3 a 4 frases, usando o percentual de compatibilidade para reforçar a excelência da escolha. Foque em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
+    Quando inserir a compatibilidade no texto, retirar os dois asteriscos "**" de destaque.
     """
     MAX_RETRIES = 3
     DELAY_SECONDS = 2
