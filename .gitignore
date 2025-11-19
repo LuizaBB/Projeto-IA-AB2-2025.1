@@ -1,0 +1,6 @@
+# Variáveis de Ambiente
+.env
+
+# Ambiente Virtual Python
+venv/
+*.pyc
