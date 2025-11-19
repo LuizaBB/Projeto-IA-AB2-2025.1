@@ -21,3 +21,4 @@ pip install -r requirements.txt
 python app2.py
 ```
 2. No terminal, procurar link do servidor ativado. Copiar endereço para um navegador ou Ctrl+Click no link.
+OBS: app.py executa a versão primária do projeto (mais simples e vinculada à index1.html), enquanto app2.py executa a versão mais atualizada (vinculada à index2.html).
