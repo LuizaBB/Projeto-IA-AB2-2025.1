@@ -1,7 +1,7 @@
 ## Projeto desenvolvido para o curso de Inteligência Artificial do Instituto Federal de Alagoas (UFAL), baseado no Tema 1: Sistema de recomendação de vinho a partir de escolha de prato de jantar.
 ### 1. Pré-requisitos:
 * Python 3+.
-* Obter chave própria do Gemini. Mais informações através do (Google AI Studio)[https://aistudio.google.com/app/api-keys].
+* Obter chave própria do Gemini. Mais informações através do [Google AI Studio](https://aistudio.google.com/app/api-keys).
 ### 2. Clonar Repositório
 ### 3. Criar arquivo .env:
 1. Criar arquivo .env (nome ".env" sem extensão, arquivo de texto puro).
