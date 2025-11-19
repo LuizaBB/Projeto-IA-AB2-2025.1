@@ -28,7 +28,6 @@ def extractDishCharacteristics(client: genai.Client, dish_description: str) -> d
     'intensidade' (Um número de 1 a 5, onde 1 é muito leve e 5 é muito forte/encorpado),
     'acidez' (ex: 'Baixa', 'Média', 'Alta'),
     'sabor_principal' (ex: 'Doce', 'Salgado', 'Picante', 'Terroso').
-
     Descrição do Prato: "{dish_description}"
     """ #prompt detalhado para o gemini
     MAX_RETRIES = 3
@@ -94,14 +93,15 @@ def generateJustification(client: genai.Client, dish_description: str, wine_name
     except IndexError:
         return f"Não foi possível encontrar detalhes para o vinho {wine_name} para justificar."
     prompt = f"""
-    Você é um sommelier especialista. Sua tarefa é escrever uma justificativa de harmonização de vinhos de forma persuasiva e elegante.
-
+    Você é um sommelier especialista. 
+    Sua tarefa é escrever uma justificativa de harmonização de vinhos de forma persuasiva e elegante.
     - **PRATO:** {dish_description}
     - **VINHO RECOMENDADO:** {wine_name} ({tipo_vinho}, {corpo_vinho})
     - **COMPATIBILIDADE CALCULADA:** {wine_score}%
     - **CARACTERÍSTICAS-CHAVE DO VINHO:** Notas de {notas_sabor}.
-
-    Explique a harmonização em 3 a 4 frases, usando o percentual de compatibilidade para reforçar a excelência da escolha. Foque em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, elevando a experiência gastronômica.
+    Explique a harmonização em 3 a 4 frases, usando o percentual de compatibilidade para reforçar a excelência da escolha. 
+    Foque em como as características do vinho (corpo, notas, acidez) se complementam ou contrastam com as características do prato, 
+    elevando a experiência gastronômica.
     Quando inserir a compatibilidade no texto, retirar os dois asteriscos "**" de destaque.
     """
     MAX_RETRIES = 3
