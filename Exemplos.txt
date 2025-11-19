@@ -1,0 +1,6 @@
+#,Descrição do Prato ,Características Esperadas,Recomendação Esperada 
+1,Bife Ancho na Manteiga com purê de batatas trufado e um toque de pimenta do reino.,"tipo_carne: Carne Vermelha, intensidade: 5, acidez: Baixa, sabor_principal: Salgado/Umami","Cabernet Sauvignon (Tinto, Encorpado, Alto Tanino)"
+2,Salmão Grelhado com molho de maracujá e aspargos cozidos no vapor.,"tipo_carne: Peixe, intensidade: 2, acidez: Alta, sabor_principal: Ácido/Frutado","Sauvignon Blanc (Branco, Leve, Alta Acidez)"
+3,Frango Assado com batatas rústicas e alecrim. Um prato simples e aromático.,"tipo_carne: Aves, intensidade: 3, acidez: Média, sabor_principal: Salgado/Ervas","Pinot Noir (Tinto, Leve, Versátil) ou um Chardonnay sem passagem por madeira"
+4,"Curry Tailandês de Vegetais com leite de coco, abóbora e um leve toque apimentado.","tipo_carne: Vegetariano, intensidade: 4, acidez: Média, sabor_principal: Picante/Doce",Vinho Branco Doce/Off-Dry (Açúcar para neutralizar o picante)
+5,Bolo de Chocolate Meio Amargo com calda de caramelo e uma pitada de flor de sal.,"tipo_carne: Sobremesa (Não aplicável), intensidade: 5, acidez: Baixa, sabor_principal: Doce/Amargo","Vinho do Porto (Tinto, Doce, Encorpado)"
